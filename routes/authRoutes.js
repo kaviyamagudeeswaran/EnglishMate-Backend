@@ -2,7 +2,7 @@
 import express from "express";
 import User from "../models/user.js"; // ensure filename is lowercase 'user.js'
 import jwt from "jsonwebtoken";
-
+// import User from "../models/user.js";
 const router = express.Router();
 
 // ===============================
