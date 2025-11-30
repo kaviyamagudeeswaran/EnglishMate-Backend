@@ -1,10 +1,5 @@
 import express from "express";
-import {
-  registerUser,
-  loginUser,
-  getMe,
-  updateUserProfile,
-} from "../controllers/authController.js";
+import { registerUser, loginUser, getMe, updateUserProfile } from "../controllers/authController.js";
 import cookieParser from "cookie-parser";
 
 const router = express.Router();
