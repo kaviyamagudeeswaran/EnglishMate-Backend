@@ -29,6 +29,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api", progressRoutes);
+app.use(
+  cors({
+    origin: "https://englishmate-frontend.onrender.com", // frontend URL
+    credentials: true, // allow cookies
+  })
+);
+app.use(cookieParser());
 
 // Test route
 app.get("/", (req, res) => {

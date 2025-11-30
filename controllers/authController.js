@@ -6,7 +6,6 @@ import jwt from "jsonwebtoken";
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
     if (!name || !email || !password)
       return res.status(400).json({ msg: "All fields are required" });
 
@@ -14,7 +13,6 @@ export const registerUser = async (req, res) => {
     if (existing) return res.status(400).json({ msg: "Email already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await User.create({
       name,
       email,
@@ -35,7 +33,6 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password)
       return res.status(400).json({ msg: "All fields are required" });
 
@@ -49,9 +46,16 @@ export const loginUser = async (req, res) => {
       expiresIn: "7d",
     });
 
+    // Set token as HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true, // HTTPS only
+      sameSite: "None", // allows mobile/Brave browsers
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     res.json({
       msg: "Login successful",
-      token,
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
@@ -60,7 +64,21 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// UPDATE PROFILE  ✅ required for your frontend
+// GET CURRENT USER
+export const getMe = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ msg: "Not logged in" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+    res.json({ user });
+  } catch (err) {
+    res.status(401).json({ msg: "Invalid token" });
+  }
+};
+
+// UPDATE PROFILE
 export const updateUserProfile = async (req, res) => {
   try {
     const { email } = req.params;
