@@ -9,17 +9,26 @@ import userRoutes from "./routes/userRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import moduleContentRoutes from "./routes/moduleContent.routes.js";
 import progressRoutes from "./routes/progressRoutes.js";
-// Load .env
+
+// Load environment variables
 dotenv.config();
 
-// Connect to MongoDB (only once)
+// Connect to MongoDB
 connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // frontend dev
+      "https://englishmate-frontend.onrender.com", // deployed frontend
+    ],
+    credentials: true, // allow cookies
+  })
+);
 app.use(express.json());
 
 // Routes
@@ -35,7 +44,7 @@ app.get("/", (req, res) => {
   res.send("Server is running successfully 🚀");
 });
 
-// Error Handler
+// Global Error Handler
 app.use((err, req, res, next) => {
   console.error("GLOBAL ERROR:", err.stack);
   res.status(500).json({ msg: "Something went wrong" });
