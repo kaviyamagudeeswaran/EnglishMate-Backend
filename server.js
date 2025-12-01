@@ -1,8 +1,6 @@
-// server.js
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
 
 import userProgressRoutes from "./routes/userProgress.routes.js";
@@ -11,27 +9,18 @@ import userRoutes from "./routes/userRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import moduleContentRoutes from "./routes/moduleContent.routes.js";
 import progressRoutes from "./routes/progressRoutes.js";
-
-// Load environment variables
+// Load .env
 dotenv.config();
 
-// Connect to MongoDB
+// Connect to MongoDB (only once)
 connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-app.set("trust proxy", 1);
-
 
 // Middleware
-app.use(
-  cors({
-    origin: "https://englishmate-frontend.onrender.com", // your frontend URL
-    credentials: true, // allow cookies
-  })
-);
-app.use(express.json()); // parse JSON bodies
-app.use(cookieParser()); // parse cookies
+app.use(cors());
+app.use(express.json());
 
 // Routes
 app.use("/api/module", moduleContentRoutes);
@@ -46,7 +35,7 @@ app.get("/", (req, res) => {
   res.send("Server is running successfully 🚀");
 });
 
-// Global error handler
+// Error Handler
 app.use((err, req, res, next) => {
   console.error("GLOBAL ERROR:", err.stack);
   res.status(500).json({ msg: "Something went wrong" });
