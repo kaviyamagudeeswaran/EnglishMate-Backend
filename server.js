@@ -10,28 +10,45 @@ import profileRoutes from "./routes/profileRoutes.js";
 import moduleContentRoutes from "./routes/moduleContent.routes.js";
 import progressRoutes from "./routes/progressRoutes.js";
 
-// Load environment variables
 dotenv.config();
-
-// Connect to MongoDB
 connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// ----------------------
+// CORS CONFIG
+// ----------------------
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:4173",
+  "http://localhost:5173",
+  "https://englishmate-frontend.onrender.com",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173", // frontend dev
-      "https://englishmate-frontend.onrender.com", // deployed frontend
-    ],
-    credentials: true, // allow cookies
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Blocked by CORS: " + origin));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
+
+// Handle preflight
+// app.options("*", cors());
+
 app.use(express.json());
 
-// Routes
+// ----------------------
+// ROUTES
+// ----------------------
 app.use("/api/module", moduleContentRoutes);
 app.use("/api/progress", userProgressRoutes);
 app.use("/api/auth", authRoutes);
@@ -40,15 +57,24 @@ app.use("/api/users", userRoutes);
 app.use("/api", progressRoutes);
 
 // Test route
-app.get("/", (req, res) => {
-  res.send("Server is running successfully 🚀");
+app.get("/", (req, res) => res.send("Server is running successfully 🚀"));
+
+// ----------------------
+// 404 Handler (Express only, do NOT use router.use("*"))
+// ----------------------
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
 });
 
+// ----------------------
 // Global Error Handler
+// ----------------------
 app.use((err, req, res, next) => {
-  console.error("GLOBAL ERROR:", err.stack);
-  res.status(500).json({ msg: "Something went wrong" });
+  console.error("GLOBAL ERROR:", err.stack || err);
+  res.status(500).json({ msg: "Something went wrong", error: err.message });
 });
 
+// ----------------------
 // Start server
+// ----------------------
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
