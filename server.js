@@ -19,16 +19,22 @@ const PORT = process.env.PORT || 5000;
 // ----------------------
 // CORS CONFIG
 // ----------------------
+
+// Replace with your computer's local network IP for LAN access
+const NETWORK_IP = "192.168.1.5"; // <-- Change this to your actual LAN IP
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:4173",
   "http://localhost:5173",
+  `http://${NETWORK_IP}:4173`, // frontend running on another device in network
   "https://englishmate-frontend.onrender.com",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // Allow requests with no origin (like Postman) or allowed origins
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -41,9 +47,9 @@ app.use(
   })
 );
 
-// Handle preflight
-// app.options("*", cors());
-
+// ----------------------
+// Middleware
+// ----------------------
 app.use(express.json());
 
 // ----------------------
@@ -56,11 +62,13 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api", progressRoutes);
 
+// ----------------------
 // Test route
+// ----------------------
 app.get("/", (req, res) => res.send("Server is running successfully 🚀"));
 
 // ----------------------
-// 404 Handler (Express only, do NOT use router.use("*"))
+// 404 Handler
 // ----------------------
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
@@ -75,6 +83,8 @@ app.use((err, req, res, next) => {
 });
 
 // ----------------------
-// Start server
+// Start server on all interfaces
 // ----------------------
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () =>
+  console.log(`Server running on port ${PORT}, accessible on LAN`)
+);
