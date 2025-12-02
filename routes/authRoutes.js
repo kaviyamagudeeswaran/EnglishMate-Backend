@@ -1,29 +1,32 @@
 // routes/authRoutes.js
 import express from "express";
-import User from "../models/User.js";
+import User from "../models/user.js"; // ensure filename is lowercase 'user.js'
 import jwt from "jsonwebtoken";
-import { protect } from "../middleware/authMiddleware.js"; // JWT middleware
 
 const router = express.Router();
 
-// ----------------------
+// ===============================
 // REGISTER
-// ----------------------
+// ===============================
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    if (!name || !email || !password)
+
+    if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
+    }
 
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: "User already exists" });
 
     const newUser = await User.create({ name, email, password });
 
+    // create token
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
+    // return user and token
     res
       .status(201)
       .json({ message: "Registered successfully", user: newUser, token });
@@ -33,12 +36,13 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ----------------------
+// ===============================
 // LOGIN
-// ----------------------
+// ===============================
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password)
       return res.status(400).json({ message: "All fields required" });
 
@@ -59,21 +63,18 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ----------------------
-// UPDATE PROFILE (JWT protected)
-// ----------------------
-router.put("/update", protect, async (req, res) => {
+// ===============================
+// UPDATE PROFILE
+// ===============================
+router.put("/update/:email", async (req, res) => {
   try {
-    const userId = req.user.id; // set by JWT middleware
+    const { email } = req.params;
     const updates = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
-      new: true,
-    });
-    if (!updatedUser)
-      return res.status(404).json({ message: "User not found" });
+    const user = await User.findOneAndUpdate({ email }, updates, { new: true });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.status(200).json({ message: "Profile updated", user: updatedUser });
+    res.status(200).json({ message: "Profile updated", user });
   } catch (err) {
     console.log("PROFILE UPDATE ERROR:", err);
     res.status(500).json({ message: "Server error" });
