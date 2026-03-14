@@ -28,7 +28,7 @@ const allowedOrigins = [
   "http://localhost:4173",
   "http://localhost:5173",
   `http://${NETWORK_IP}:4173`, // frontend running on another device in network
-  "https://englishmate-frontend.onrender.com",
+  // "https://englishmate-frontend.onrender.com",
 ];
 
 app.use(
