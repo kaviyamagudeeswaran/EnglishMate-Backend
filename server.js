@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
 
+// Routes
 import userProgressRoutes from "./routes/userProgress.routes.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -10,6 +11,9 @@ import profileRoutes from "./routes/profileRoutes.js";
 import moduleContentRoutes from "./routes/moduleContent.routes.js";
 import progressRoutes from "./routes/progressRoutes.js";
 
+// ----------------------
+// CONFIG
+// ----------------------
 dotenv.config();
 connectDB();
 
@@ -17,35 +21,37 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ----------------------
-// CORS CONFIG
+// CORS CONFIG (FIXED)
 // ----------------------
-
-// Replace with your computer's local network IP for LAN access
-const NETWORK_IP = "192.168.1.5"; // <-- Change this to your actual LAN IP
-
 const allowedOrigins = [
+  "http://localhost:5173", // Vite frontend
   "http://localhost:3000",
-  "http://localhost:4173",
-  "http://localhost:5173",
-  `http://${NETWORK_IP}:4173`, // frontend running on another device in network
-  // "https://englishmate-frontend.onrender.com",
+  "https://englishmate-frontend.onrender.com", // add your deployed frontend
 ];
 
-// ----------------------
-// CORS FIX (WORKS EVERYWHERE)
-// ----------------------
 app.use(
-  
   cors({
-    origin: "http://localhost:5173", // your frontend
+    origin: function (origin, callback) {
+      // allow requests with no origin (like Postman)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed: " + origin));
+      }
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // IMPORTANT
-  })
+    credentials: true,
+  }),
 );
-    
+
+// ✅ Handle preflight requests
+// app.options("/*", cors());
+
 // ----------------------
-// Middleware
+// MIDDLEWARE
 // ----------------------
 app.use(express.json());
 
@@ -60,28 +66,34 @@ app.use("/api/users", userRoutes);
 app.use("/api", progressRoutes);
 
 // ----------------------
-// Test route
+// TEST ROUTE
 // ----------------------
-app.get("/", (req, res) => res.send("Server is running successfully 🚀"));
+app.get("/", (req, res) => {
+  res.send("Server is running successfully 🚀");
+});
 
 // ----------------------
-// 404 Handler
+// 404 HANDLER
 // ----------------------
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
 // ----------------------
-// Global Error Handler
+// GLOBAL ERROR HANDLER
 // ----------------------
 app.use((err, req, res, next) => {
-  console.error("GLOBAL ERROR:", err.stack || err);
-  res.status(500).json({ msg: "Something went wrong", error: err.message });
+  console.error("GLOBAL ERROR:", err.message || err);
+
+  res.status(500).json({
+    message: "Server error",
+    error: err.message,
+  });
 });
 
 // ----------------------
-// Start server on all interfaces
+// START SERVER
 // ----------------------
-app.listen(PORT, "0.0.0.0", () =>
-  console.log(`Server running on port ${PORT}, accessible on LAN`),
-);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
